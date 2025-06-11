@@ -9,6 +9,7 @@ export class UpstoxAccount extends Document {
   @Prop({ required: true }) clientId: string;
   @Prop({ required: true }) clientSecret: string;
   @Prop({ required: true }) redirectUri: string;
+  @Prop() userId?: string;
   @Prop() accessToken?: string;
   @Prop() refreshToken?: string;
   @Prop() tokenExpiry?: Date;

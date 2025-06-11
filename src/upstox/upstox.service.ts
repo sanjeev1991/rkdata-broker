@@ -36,8 +36,9 @@ export class UpstoxService {
   }
 
   async exchangeCodeForTokens(id: string): Promise<{
-    accessToken: string;
-    refreshToken: string;
+    accessToken?: string;
+    refreshToken?: string;
+    userId?: string;
   }> {
     const account = await this.model.findById(id);
     if (!account?.authCode) throw new Error('Missing auth code');
@@ -55,14 +56,19 @@ export class UpstoxService {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
     );
 
-    const { access_token, refresh_token, expires_in } = response.data.data;
+    const { access_token, extended_token, user_id } = response.data;
 
     account.accessToken = access_token;
-    account.refreshToken = refresh_token;
-    account.tokenExpiry = new Date(Date.now() + expires_in * 1000);
+    account.refreshToken = extended_token;
+    account.tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    account.userId = user_id;
     await account.save();
 
-    return { accessToken: access_token, refreshToken: refresh_token };
+    return {
+      accessToken: access_token,
+      refreshToken: extended_token,
+      userId: user_id,
+    };
   }
 
   async refreshAccessToken(id: any): Promise<{ accessToken: string }> {
@@ -81,10 +87,10 @@ export class UpstoxService {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
     );
 
-    const { access_token, expires_in } = response.data.data;
+    const { access_token } = response.data;
 
     account.accessToken = access_token;
-    account.tokenExpiry = new Date(Date.now() + expires_in * 1000);
+    account.tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await account.save();
 
     return { accessToken: access_token };
@@ -95,16 +101,13 @@ export class UpstoxService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @Cron('0 */30 * * * *', { timeZone: 'Asia/Kolkata' }) // every 30 minutes
+  @Cron('10 4 * * *', { timeZone: 'Asia/Kolkata' }) // daily at 4:10 AM
   async scheduledRefreshAllTokens(): Promise<void> {
     const accounts = await this.model.find();
 
     for (const account of accounts) {
       try {
-        if (
-          account.refreshToken &&
-          (!account.tokenExpiry || new Date() >= account.tokenExpiry)
-        ) {
+        if (account.refreshToken) {
           await this.refreshAccessToken(account._id.toString());
           Logger.log(`✅ Token refreshed for account: ${account.name}`);
         }
