@@ -4,7 +4,7 @@ import { UpstoxAccount } from './schema/upstox-account.schema';
 import { Model } from 'mongoose';
 import axios, { AxiosResponse } from 'axios';
 import { UpstoxTokenResponse } from './types/upstox-token-response.interface';
-import { Cron } from '@nestjs/schedule';
+//import { Cron } from '@nestjs/schedule';
 import { Logger } from '@nestjs/common';
 @Injectable()
 export class UpstoxService {
@@ -101,7 +101,7 @@ export class UpstoxService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  @Cron('10 4 * * *', { timeZone: 'Asia/Kolkata' }) // daily at 4:10 AM
+  //@Cron('10 4 * * *', { timeZone: 'Asia/Kolkata' }) // daily at 4:10 AM
   async scheduledRefreshAllTokens(): Promise<void> {
     const accounts = await this.model.find();
 
