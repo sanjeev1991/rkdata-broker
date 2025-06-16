@@ -7,14 +7,18 @@ import {
 import { UpstoxService } from './upstox.service';
 import { UpstoxController } from './upstox.controller';
 import { WebhookController } from './webhook.controller';
+import { UpstoxManager } from './upstox.manager';
+import { CsvLoggerModule } from '../csv-logger/csv-logger.module';
+
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: UpstoxAccount.name, schema: UpstoxAccountSchema },
     ]),
+    CsvLoggerModule, // Importing CsvLoggerModule to use its services
   ],
-  providers: [UpstoxService],
+  providers: [UpstoxService, UpstoxManager],
   controllers: [UpstoxController, WebhookController],
 })
 export class UpstoxModule {}

@@ -5,6 +5,9 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UpstoxModule } from './upstox/upstox.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bull';
+import { CsvLoggerModule } from './csv-logger/csv-logger.module';
+
 
 @Module({
   imports: [
@@ -20,6 +23,13 @@ import { ScheduleModule } from '@nestjs/schedule';
         uri: configService.get<string>('MONGODB_URI'),
       }),
     }),
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    CsvLoggerModule,
     UpstoxModule,
   ],
   controllers: [AppController],

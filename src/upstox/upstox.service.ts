@@ -6,13 +6,32 @@ import axios, { AxiosResponse } from 'axios';
 import { UpstoxTokenResponse } from './types/upstox-token-response.interface';
 //import { Cron } from '@nestjs/schedule';
 import { Logger } from '@nestjs/common';
+import { UpstoxManager } from './upstox.manager';
+
 @Injectable()
 export class UpstoxService {
   private readonly logger = new Logger(UpstoxService.name);
   constructor(
     @InjectModel(UpstoxAccount.name)
     private readonly model: Model<UpstoxAccount>,
+    private readonly manager: UpstoxManager,
   ) {}
+
+  async onModuleInit() {
+    const accounts = await this.model.find({
+      accessToken: { $exists: true, $ne: null },
+    });
+    for (const acc of accounts) {
+      await this.manager.connectSocket({
+        accountId: acc._id.toString(),
+        accessToken: acc.accessToken!,
+      });
+    }
+  }
+
+  async subscribe(instrumentKeys: string[]): Promise<void> {
+    await this.manager.subscribeInstruments(instrumentKeys);
+  }
 
   async addAccount(data: Partial<UpstoxAccount>) {
     return this.model.create(data);
@@ -100,7 +119,6 @@ export class UpstoxService {
     return this.model.find().select('-__v');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   //@Cron('10 4 * * *', { timeZone: 'Asia/Kolkata' }) // daily at 4:10 AM
   async scheduledRefreshAllTokens(): Promise<void> {
     const accounts = await this.model.find();

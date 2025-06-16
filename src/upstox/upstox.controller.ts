@@ -1,4 +1,11 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  BadRequestException,
+} from '@nestjs/common';
 import { UpstoxService } from './upstox.service';
 //import { AddUpstoxAccountDto } from './dto/add-upstox-account.dto';
 //import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -15,6 +22,19 @@ export class UpstoxController {
   @Get('login-url/:id')
   async getLoginUrl(@Param('id') id: string) {
     return this.upstoxService.getLoginUrl(id);
+  }
+
+  @Post('subscribe')
+  async subscribeToInstruments(
+    @Body('instrumentKeys') instrumentKeys: string[],
+  ): Promise<{ message: string }> {
+    if (!instrumentKeys || !Array.isArray(instrumentKeys)) {
+      throw new BadRequestException('instrumentKeys must be a string array');
+    }
+
+    await this.upstoxService.subscribe(instrumentKeys);
+
+    return { message: 'Subscription request processed successfully' };
   }
 
   // @Post('save-auth-code/:id')
